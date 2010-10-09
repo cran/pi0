@@ -226,17 +226,19 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
             Kmat=t(Jacobian)%*%Kmat%*%Jacobian
         }
         eigvals=eigen((hess+t(hess))/2, symmetric=TRUE, only.values=TRUE)$val
-        ans=try(max(c(0, sum(diag(solve((hess+t(hess))/2, Kmat))))))
+        hess=(hess+t(hess))/2
+        ans=try(solve(hess,Kmat))
+#        ans=try(max(c(0, sum(diag(solve((hess+t(hess))/2, Kmat))))))
         if(tail(eigvals,1)<1e-6 || class(ans)=='try-error' ) {
             max(c(0, sum(diag(solve(nearPD(hess)$mat, Kmat)))))
         }else{
-            ans
+            max(c(0,sum(diag(ans))))
         }
     }
 
     if(missing(starts)) {
         tmp=parncpt(tstat,df,zeromean=FALSE)
-        starts=rep(coef(tmp)['pi0']/K,K)
+        starts=rep(max(min(1-1e-3,coef(tmp)['pi0']),1e-3)/K,K)
         if(sum(starts)>1-1e-6) starts=starts/sum(starts)*(1-1e-6)
     }
 
@@ -335,14 +337,17 @@ plot.nparncpt=function(x,...)
     abline(v=log10(x$all.lambdas[x$i.final]), col=2);
     abline(h=x$all.nics[x$i.final]+c(-1,1)*x$all.nic.sd[x$i.final], col=4)
 #    abline(v=log10(x$all.lambdas[i.1se]), col=2,lty=2)
+    title(sub=paste('lambda =',round(x$lambda,3),sep=''))
 
 #    plot(log10(x$all.lambdas), x$all.enps); abline(v=log10(x$all.lambdas[c(x$i.final,i.1se)]), xlab='log10(lambda)', ylab='ENP', lty=1:2)
 #    plot(log10(x$all.lambdas), x$all.pi0s); abline(v=log10(x$all.lambdas[c(x$i.final,i.1se)]), xlab='log10(lambda)', ylab='pi0', lty=1:2)
     plot(log10(x$all.lambdas), x$all.enps,xlab='log10(lambda)',ylab='effective # parameters',
         ylim=c(0,max(x$all.enps[i.2se]))); 
         abline(v=log10(x$all.lambdas[c(x$i.final)]), xlab='log10(lambda)', ylab='ENP', lty=1)
+    title(sub=paste('df =', round(x$enp,3),sep=''))
     plot(log10(x$all.lambdas), x$all.pi0s, xlab='log10(lambda)', ylab='pi0',ylim=0:1); 
         abline(v=log10(x$all.lambdas[c(x$i.final)]), xlab='log10(lambda)', ylab='pi0', lty=1)
+    title(sub=paste('pi0 =', round(x$pi0,3),sep=''))
 
     d.ncp=function(xx)        # p in the paper
     {   ## depends on mus, sigs
@@ -354,6 +359,7 @@ plot.nparncpt=function(x,...)
     curve(d.ncp, min(x$data$tstat,x$all.mus),max(x$data$tstat,x$all.mus),100,col=4,lwd=2, xlab='delta',ylab='density')
 #    detach(x)
     rug(x$all.mus)
+    title(sub=paste("mean =",round(x$mu.ncp,3),"; sd =",round(x$sd.ncp,3),sep=''))
     par(op)
     invisible(x)
 }

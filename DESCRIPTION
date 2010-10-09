@@ -1,8 +1,8 @@
 Package: pi0
 Type: Package
 Title: Estimating the proportion of true null hypotheses for FDR
-Version: 1.2-131
-Date: 2010-09-19
+Version: 1.2-139
+Date: 2010-10-09
 Author: Long Qu <longor@iastate.edu>, Dan Nettleton
         <dnett@iastate.edu>, Jack Dekkers <jdekkers@iastate.edu>
 Maintainer: Long Qu <longor@iastate.edu>
@@ -20,6 +20,6 @@ Description: This package implements method(s) to (approximately
         noncentrality parameters from a large number of parametric
         tests.
 License: GPL (>= 2)
-Packaged: 2010-09-20 06:35:06 UTC; longor
+Packaged: 2010-10-09 16:58:59 UTC; longor
 Repository: CRAN
-Date/Publication: 2010-09-20 07:41:13
+Date/Publication: 2010-10-09 19:34:50
