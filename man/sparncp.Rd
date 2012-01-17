@@ -41,11 +41,11 @@ are made and their results are used in combination.
         \item{nparfit}{the fitted \code{\link{nparncpt}} object}
 }
 \references{ 
-I. Olkin and C. H. Spiegelman.  1987. A Semiparametric Approach to Density Estimation. Journal of the American Statistical Association. 82,399,858-865
+I. Olkin and C. H. Spiegelman. (1987) A Semiparametric Approach to Density Estimation. Journal of the American Statistical Association. 82,399,858--865
 
-Qu, Nettleton, Dekkers. Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. (unpublished)
+Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics (in press).
 }
-\author{ Long Qu \email{lqu@biostatsolutions.com}}
+\author{ Long Qu }
 %\note{ 
 %}
 \seealso{\code{\link{parncpt}}, \code{\link{nparncpt}}, 

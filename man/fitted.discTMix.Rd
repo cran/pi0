@@ -1,7 +1,7 @@
 \name{fitted.discTMix}
 \Rdversion{1.1}
 \alias{fitted.discTMix}
-\alias{fitted.values.discTMix}
+%\alias{fitted.values.discTMix}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Density evaluated at observed statistics for discTMix class
 }
@@ -10,7 +10,7 @@
 }
 \usage{
 \method{fitted}{discTMix}(object, ...)
-\method{fitted.values}{discTMix}(object, ...)
+%\method{fitted.values}{discTMix}(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,7 +34,7 @@
 \references{
 Pawitan Y, Krishna Murthy KR, Michiels S, Ploner A (2005) Bias in the estimation of false discovery rate in microarray studies, Bioinformatics.
 }
-\author{Long Qu \email{lqu@biostatsolutions.com}
+\author{Long Qu 
 %%  ~~who you are~~
 }
 %\note{
