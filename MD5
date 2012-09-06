@@ -1,4 +1,4 @@
-5b64cd88f70df8434a8e1370f6e0853d *DESCRIPTION
+104d10726b0ee859eb357d9b807a3bc7 *DESCRIPTION
 951e1c7329bbed3ee4aa2c8a1951534c *NAMESPACE
 430d3e4962704b2443e9c4f3d671e4c1 *R/CBUM.R
 8ae0ed7ed38e7aca619547604b412918 *R/NBsplines.R
@@ -24,7 +24,7 @@ a4b130dfdbece621d866c612df38136a *R/extrp.pi0.unknown.gam2.R
 b292063419587d0bee4dd81819723661 *R/gjack.R
 e450b1d930deaa6fd01ba331244cd663 *R/harmean.R
 11de253e6ef52c9e74f9fd8f55a01354 *R/histf1.R
-da4def229d870e6d9064b73a7a4e2d85 *R/int.nct.R
+11b9d8a3f2e4466122ff986aae501c08 *R/int.nct.R
 78774410bc3c564221868d25b80a4db8 *R/laplace.nct.R
 546d547d8b3535d4b253ae944ea447ca *R/lastbin.R
 3c885102d9ab0dba96d33e9fb37e8934 *R/lfdr.R
@@ -103,7 +103,7 @@ f81143ae4463eb4225b461240ac35e3b *man/parncp.Rd
 87b442ace3561ad3d24eabc231d46924 *man/pavaf1.Rd
 65e0e420ab01b3d230e6e33e9f2b9679 *man/pdf.dist.Rd
 7db1f2cd945038c4ca0e2c4f0518ebd4 *man/pi0-internal.Rd
-96898e0764928a6dc2f91b00ffc97361 *man/pi0-package.Rd
+b2beb42950bb41dc731d050fb34a56df *man/pi0-package.Rd
 f9381745d14b389678a54562cf63a34e *man/plot.extrpi0.Rd
 09fdf8befa7f8073d14c1720f8090547 *man/plot.nparncp.Rd
 1ed9ebb1f4e6db185ef6b25f474b62ea *man/plot.parncp.Rd
