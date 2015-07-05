@@ -6,6 +6,12 @@ dncp.parncpt=function(obj, fold=FALSE, ...)
     if(fold) fold(ans) else ans
 }
 
+dncp.parncpt2=function(obj, fold=FALSE, ...)
+{
+    ans=function(x) obj$tau*dnorm(x, obj$mu1.ncp, obj$sd1.ncp)+(1-obj$tau)*dnorm(x, obj$mu2.ncp, obj$sd2.ncp)
+    if(fold) fold(ans) else ans
+}
+
 dncp.nparncpt=function(obj, fold=FALSE, ...) {
     d.ncp = function(xx) {
         xx = outer(xx, obj$all.mus, "-")
@@ -36,10 +42,16 @@ dncp.parncpF=function(obj,...)
 
 dncp.nparncpF=function(obj,...)        # p in the paper
 {   ## depends on mus, sigs
-    d.ncp=function(xx){
-        z=function(k, u) dchisq(u/obj$all.gam2s[k], obj$data$df1, obj$all.mus[k]/obj$all.gam2s[k]-obj$data$df1)/obj$all.gam2s[k]
-        qx=outer(1:(length(obj$all.mus)-2), xx,  z)
-        drop(obj$beta %*% qx)
+	mu2s=sort(unique(obj$all.mus^2))
+	gam2=obj$gam2
+    d.ncp=function(xx)        # p in the paper
+    {   ## depends on mu2s, gam2, obj
+		schisq.x=outer(xx/gam2, mu2s/gam2, dchisq, df=obj$data$df1)/gam2
+		ans=drop(schisq.x %*% obj$beta)
+		if(any(xx==0) && obj$data$df1<2){
+			ans[xx==0]=Inf
+		}
+		ans
     }
     d.ncp
 }

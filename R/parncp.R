@@ -77,9 +77,10 @@ parncpt.bfgs.non0mean=function(tstat,df,starts, grids, approximation='int2',...)
 
     ll=-optimFit$value
     attr(ll,'df')=3
+	attr(ll,'nobs')=G
     class(ll)='logLik'
 
-#    loadOrInstall("numDeriv")
+#library("numDeriv")
 #    tmp=make.link('logit'); logit=tmp$linkfun; logitinv=tmp$linkinv; dlogitinv=tmp$mu.eta
 #    obj.nobound=function(par)obj(c(logitinv(par[1]),par[2], exp(par[3])))
 #    app.hess.nobound=hessian(obj.nobound, c(logit(optimFit$par[1]), optimFit$par[2], log(optimFit$par[3])))  ## need to consider hitting boundaries
@@ -87,7 +88,7 @@ parncpt.bfgs.non0mean=function(tstat,df,starts, grids, approximation='int2',...)
 #
     ans=list(pi0=optimFit$par[1], mu.ncp=optimFit$par[2], sd.ncp=optimFit$par[3], data=list(tstat=tstat, df=df), 
              logLik=ll, enp=3, par=optimFit$par,
-             obj=obj, gradiant=deriv.non0mean(optimFit$par), hessian=optimFit$hessian)
+             obj=obj, gradiant=deriv.non0mean(optimFit$par), hessian=optimFit$hessian,nobs=G)
     class(ans)=c('parncpt','ncpest')
     ans
 }
@@ -141,9 +142,10 @@ parncpt.bfgs.0mean=function(tstat,df, starts, grids, approximation='int2',...)
 
     ll=-optimFit$value
     attr(ll,'df')=2
+	attr(ll,'nobs')=G
     class(ll)='logLik'
     
-#    loadOrInstall("numDeriv")
+#library("numDeriv")
 #    tmp=make.link('logit'); logit=tmp$linkfun; logitinv=tmp$linkinv; dlogitinv=tmp$mu.eta
 #    obj.nobound=function(par)obj(c(logitinv(par[1]),exp(par[2])))
 #    app.hess.nobound=hessian(obj.nobound, c(logit(optimFit$par[1]), log(optimFit$par[2])))  ## need to consider hitting boundaries
@@ -151,7 +153,7 @@ parncpt.bfgs.0mean=function(tstat,df, starts, grids, approximation='int2',...)
 #
     ans=list(pi0=optimFit$par[1], mu.ncp=0, sd.ncp=optimFit$par[2], data=list(tstat=tstat, df=df), 
              logLik=ll, enp=2, par=optimFit$par,
-             obj=obj, gradiant=deriv.0mean(optimFit$par), hessian=optimFit$hessian)
+             obj=obj, gradiant=deriv.0mean(optimFit$par), hessian=optimFit$hessian,nobs=G)
     class(ans)=c('parncpt','ncpest')
     ans
 }
@@ -193,13 +195,13 @@ print.parncpt=function(x,...)
 }
 plot.parncpt=function(x,...)
 {
-#    x11(width=8, height=4)
+#    dev.new(width=8, height=4)
     op=par(mfrow=c(1,2))
     hist(x$data$tstat, pr=TRUE, br=min(c(max(c(20, length(x$data$tstat)/100)), 200)), xlab='t',main='t-statistics')
     ord=order(x$data$tstat)
     lines(x$data$tstat[ord], fitted.parncpt(x)[ord], col='red', lwd=2)
     d.ncp=function(d) dnorm(d, x$mu.ncp, x$sd.ncp)
-    curve(d.ncp, min(x$data$tstat), max(x$data$tstat), 500, xlab='delta', ylab='density',main='noncentrality parameters')
+    curve(d.ncp, min(x$data$tstat), max(x$data$tstat), 500, xlab=expression(delta), ylab='density',main='noncentrality parameters')
     abline(v=c(0, x$mu.ncp), lty=1:2)
     par(op)
     invisible(x)

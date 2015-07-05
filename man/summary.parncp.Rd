@@ -1,7 +1,9 @@
 \name{summary.parncpt}
 \Rdversion{1.1}
 \alias{summary.parncpt}
+\alias{summary.parncpt2}
 \alias{print.parncpt}
+\alias{print.parncpt2}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
         Print summary for an object of class parncp
@@ -13,6 +15,8 @@ estimated mean of noncentrality parameters (\code{mu.ncp}), estimated standard d
 \usage{
 \method{summary}{parncpt}(object,...)
 \method{print}{parncpt}(x,...)
+\method{summary}{parncpt2}(object,...)
+\method{print}{parncpt2}(x,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,7 +38,7 @@ estimated mean of noncentrality parameters (\code{mu.ncp}), estimated standard d
 %% ...
 }
 \references{
-Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics (in press).
+Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics, 68, 1178--1187.
 }
 \author{Long Qu 
 %%  ~~who you are~~

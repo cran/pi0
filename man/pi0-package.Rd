@@ -12,8 +12,8 @@ This package implements method(s) to (approximately unbiasedly) estimate the pro
 \tabular{ll}{
 Package: \tab pi0\cr
 Type: \tab Package\cr
-Version: \tab 1.3-250\cr
-Date: \tab 2012-09-06\cr
+Version: \tab 1.3-354\cr
+Date: \tab 2014-08-22\cr
 License: \tab GPL version 2 or newer\cr
 }
 \itemize{
@@ -35,11 +35,11 @@ License: \tab GPL version 2 or newer\cr
 \author{
 Long Qu 
 
-Maintainer: Long Qu \email{longorognol@hotmail.com}
+Maintainer: Long Qu \email{long.qu@wright.edu}
 }
 \references{
 
-Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics (in press).
+Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics, 68, 1178--1187.
 
 Ruppert D, Nettleton D, Hwang JT. (2007) Exploring the Information in $p$-values for the Analysis and Planning of Multiple-test Experiments. Biometrics. 63. 483-495.
 
@@ -70,13 +70,15 @@ simulatedDat=sim.dat(G=5000)
 ## this is how the 'simulatedSubex' object in this package generated
 simulatedSubex=subex(simulatedDat,balanced=FALSE,max.reps=Inf,plotit=FALSE)
 plot(simulatedSubex)
-}
+
 data(simulatedSubex); print(simulatedSubex)
 ## parametric, nonparametric, semiparametric estimate of 
 ## noncentrality parameter distribution from t-statistics
-data(simulatedTstat)
+
+
 (npfit=nparncpt(tstat=simulatedTstat, df=8, plotit=FALSE)); 
 (pfit=parncpt(tstat=simulatedTstat, df=8, zeromean=FALSE)); 
 (pfit0=parncpt(tstat=simulatedTstat, df=8, zeromean=TRUE)); 
 (spfit=sparncpt(npfit,pfit));
+}
 }

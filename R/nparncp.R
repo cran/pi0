@@ -8,16 +8,23 @@ nparncpt=function(tstat, df, ...)
         nparncpt.sqp(tstat, df, ...)
     }
 }
-nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv'), lambdas=10^seq(-1,5,by=1), starts, IC=c('BIC','CAIC','HQIC','AIC'),
+nparncpt.sqp = function (tstat, df, penalty=3L, lambdas=10^seq(-1,5,by=1), starts, IC=c('BIC','CAIC','HQIC','AIC'),
                         K=100, bounds=quantile(tstat,c(.01,.99)), solver=c('solve.QP','lsei','ipop','LowRankQP'),plotit=FALSE, verbose=FALSE, approx.hess=TRUE, ... )
 {
 #   source("int.nct.R"); source("laplace.nct.R"); source("saddlepoint.nct.R"); source("dtn.mix.R")
     solver=match.arg(solver)
-    penalty=match.arg(penalty)
+    if(is.character(penalty)){
+		penalty.choices=c('1st.deriv','2nd.deriv','3rd.deriv','4th.deriv','5th.deriv')
+		penalty=match.arg(penalty, penalty.choices)
+		penalty=which(penalty==penalty.choices)
+	}else if(is.numeric(penalty)) {
+		penalty=as.integer(penalty)
+		if(penalty<1 || penalty>5) stop('"penalty" should be an integer among 1 through 5.')
+	}else stop('"penalty" should be an integer among 1 through 5.')
     solver.package=switch(solver, solve.QP='limSolve', ipop='kernlab', lsei='limSolve',LowRankQP='LowRankQP'
     )
-    #loadOrInstall(solver.package)
-    #loadOrInstall("Matrix")
+    #library(solver.package)
+    #library("Matrix")
     if (K<=0 || length(K)!=1) stop("K should be a positive integer")
     if (any(lambdas<0)) stop("lambdas should be a vector of positive numbers")
     lambdas=sort(lambdas)
@@ -47,20 +54,20 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
     }
     b.i=b.i-h0.i
 
-    if(penalty=='1st.deriv'){
-#        Omega=diag(0,K,K)                   ### 1st order derivative
-#        for(j in 1:K) for(k in 1:j) {
-#                tmp=(mus[j]-mus[k])^2/(sigs[j]^2+sigs[k]^2); 
-#                Omega[j,k]=Omega[k,j]=(1-tmp)/sqrt(2*pi*(sigs[j]^2+sigs[k]^2)^3)*exp(-tmp/2)
-#        }
-            diffmu=outer(mus,mus,'-'); sumsig2=outer(sigs^2, sigs^2, '+')
+	diffmu=outer(mus,mus,'-'); sumsig2=outer(sigs^2, sigs^2, '+')
+    if(penalty==1L){
             Omega=exp(-diffmu^2/2/sumsig2)/sqrt(2*pi*sumsig2^5)*(sumsig2-diffmu^2)
-    }else if(penalty=='2nd.deriv'){
-            diffmu=outer(mus,mus,'-'); sumsig2=outer(sigs^2, sigs^2, '+')
+    }else if(penalty==2L){
             Omega=exp(-diffmu^2/2/sumsig2)/sqrt(2*pi*sumsig2^9)*(3*sumsig2^2-6*sumsig2*diffmu^2+diffmu^4)
-    }else if(penalty=='3rd.deriv'){
-            diffmu=outer(mus,mus,'-'); sumsig2=outer(sigs^2, sigs^2, '+')
+    }else if(penalty==3L){
             Omega=exp(-diffmu^2/2/sumsig2)/sqrt(2*pi*sumsig2^13)*(15*sumsig2^3-45*sumsig2^2*diffmu^2+15*sumsig2*diffmu^4-diffmu^6)
+    }else if(penalty == 4L) {
+        Omega = exp(-diffmu^2/2/sumsig2)/sqrt(2 * pi * sumsig2^17) * 
+            (105 * sumsig2^4 -420* sumsig2^3 * diffmu^2 +210 * sumsig2^2 * diffmu^4 -28 * 
+                 sumsig2 * diffmu^6 + diffmu^8)
+    }else if(penalty == 5L) {
+        Omega = exp(-diffmu^2/2/sumsig2)/sqrt(2 * pi * sumsig2^21) * 
+            (945 * sumsig2^5 -4725 * sumsig2^4 *diffmu^2 + 3150 * sumsig2^3 * diffmu^4 - 630 * sumsig2^2 * diffmu^6 + 45 * sumsig2 * diffmu^8 - diffmu^10)
     }
 
     NPLL=function(thetas, take.sum=TRUE ){ ### depends on h0.i, b.i, lambda, Omega, G
@@ -161,15 +168,25 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
                         limSolve::lsei(A=tmpA, B=tmpB, E=matrix(0,0,K), F=numeric(0), G=t(Amat), H=bvec, 
                              Wx=NULL, Wa=NULL, type=1)$X
                    }else if (solver=='ipop') {  ## not working well ## the R translation of the LOQO code is not very honest
-                        tmpA=ipop(c=-dvec, H=Dmat, A=t(Amat), b=bvec, l=rep(-1,K), u=rep(1,K), r=rep(1e6,K+1),verb=verbose)
-                        if(tmpA@how!='converged'){warning('ipop not converged')}
-                        tmpA@primal
+                        tmpA=try(ipop(c=-dvec, H=Dmat, A=t(Amat), b=bvec, l=rep(-1,K), u=rep(1,K), r=rep(1e6,K+1),verb=verbose), silent=TRUE)
+	                    if(class(tmpA)=='try-error'){ # solver='lsei'
+                            tmpA=chol(Dmat); tmpB=.5*drop(forwardsolve(t(tmpA), dvec)); 
+                            limSolve::lsei(A=tmpA, B=tmpB, E=matrix(0,0,K), F=numeric(0), G=t(Amat), H=bvec, 
+                                 Wx=NULL, Wa=NULL, type=1)$X
+                        }else{
+							if(tmpA@how!='converged'){warning('ipop not converged')}
+							tmpA@primal
+						  }
                    }else if (solver=='LowRankQP') { ## not working well
                         tmpTransform=solve(tcrossprod(Amat),Amat)
                         Hmat=crossprod(tmpTransform, Dmat%*%tmpTransform)
-                        tmpAns=LowRankQP(Vmat=Hmat,dvec=Hmat%*%bvec-crossprod(tmpTransform,dvec),
-                                        Amat=matrix(0,0,K+1),bvec=numeric(0),uvec=rep(1e6,K+1),method='LU',niter=2000)
-                        drop(tmpTransform%*%(bvec+tmpAns$alpha))
+                        tmpAns=try(LowRankQP::LowRankQP(Vmat=Hmat,dvec=Hmat%*%bvec-crossprod(tmpTransform,dvec),
+                                        Amat=matrix(0,0,K+1),bvec=numeric(0),uvec=rep(1e6,K+1),method='LU',niter=2000), silent=TRUE)
+	                    if(class(tmpAns)=='try-error' || any(is.na(tmpAns$alpha))){ # solver='lsei'
+                            tmpA=chol(Dmat); tmpB=.5*drop(forwardsolve(t(tmpA), dvec)); 
+                            limSolve::lsei(A=tmpA, B=tmpB, E=matrix(0,0,K), F=numeric(0), G=t(Amat), H=bvec, 
+                                 Wx=NULL, Wa=NULL, type=1)$X
+                        }else drop(tmpTransform%*%(bvec+tmpAns$alpha))
                    }
             thetas.new=thetas+qp.sol
             repeat{
@@ -259,7 +276,7 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
 
 #    if(smooth.enp) {
 #          warning("smoothing snp is not well tested")
-#        loadOrInstall("monoProc")
+#library("monoProc")
 #        loe=loess(enps~log10(lambdas))
 #        mon=mono.1d(list(log10(lambdas), fitted(loe)), bw.nrd0(fitted(loe))/3,mono1='decreasing')
 #        enps.smooth=mon@y
@@ -275,15 +292,18 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
 
     ll=-NPLL(sqp.fit[i.final,])
     attr(ll, 'df')=enps[i.final]
+	attr(ll, 'nobs')=G
     class(ll)='logLik'
 
+	if(!all(is.na(beta.final)) && mean(beta.final<.01)<.5) warning("Less than half of the estimated coefficients (betas) are less than 0.01. Your might want to try enlarging the `bounds` argument.")
+	
     ans=list(pi0=pi0s[i.final], mu.ncp=beta.final%*%mus, sd.ncp= sqrt(beta.final%*%(mus^2+sigs^2)-(beta.final%*%mus)^2), 
              logLik=ll, enp=enps[i.final], par=sqp.fit[i.final,],lambda=lambdas[i.final],
              gradiant=grad.NPLL(sqp.fit[i.final,]), hessian=hess.NPLL(sqp.fit[i.final,]),
 
              beta=beta.final, IC=IC, 
              all.mus=mus, all.sigs=sigs, data=list(tstat=tstat, df=df), i.final=i.final, all.pi0s=pi0s,
-             all.enps=enps, all.thetas=sqp.fit, all.nics=nics, all.nic.sd=nic.sd, all.lambdas=lambdas)
+             all.enps=enps, all.thetas=sqp.fit, all.nics=nics, all.nic.sd=nic.sd, all.lambdas=lambdas, nobs=G)
     class(ans)=c('nparncpt','ncpest')
     if(plotit) plot.nparncpt(ans)
     ans
@@ -291,7 +311,7 @@ nparncpt.sqp = function (tstat, df, penalty=c('3rd.deriv','2nd.deriv','1st.deriv
 
 vcov.ncpest=function(object,...)
 {
-    sovle(object$hessian)
+    solve(object$hessian)
 }
 logLik.ncpest=function(object,...)
 {
@@ -311,11 +331,11 @@ function(object, ...)
     object$pi0*dt(object$data$tstat, object$data$df)+(1-object$pi0)*drop(nonnull.mat%*%object$beta)
 }
 #lfdr.nparncpt=ppee.nparncpt=lfdr.parncpt
-summary.nparncpt=function(object,...)
+summary.nparncpt=summary.nparncpF=function(object,...)
 {
-    print.nparncpt(object,...)
+    print(object,...)
 }
-print.nparncpt=function(x,...)
+print.nparncpt=print.nparncpF=function(x,...)
 {
     cat('pi0=',x$pi0, fill=TRUE)
     cat('mu.ncp=', x$mu.ncp, fill=TRUE)
@@ -326,7 +346,7 @@ print.nparncpt=function(x,...)
 }
 plot.nparncpt=function(x,...)
 {
-#    x11(width=7,heigh=7)
+#    dev.new(width=7,heigh=7)
     op=par(mfrow=c(2,2))
 #    attach(x)
     n.lambda=length(x$all.lambdas)
@@ -347,6 +367,8 @@ plot.nparncpt=function(x,...)
         ylim=c(0,max(x$all.enps[i.2se]))); 
         abline(v=log10(x$all.lambdas[c(x$i.final)]), xlab='log10(lambda)', ylab='ENP', lty=1)
     title(sub=paste('df =', round(x$enp,3),sep=''))
+	
+	
     plot(log10(x$all.lambdas), x$all.pi0s, xlab='log10(lambda)', ylab='pi0',ylim=0:1); 
         abline(v=log10(x$all.lambdas[c(x$i.final)]), xlab='log10(lambda)', ylab='pi0', lty=1)
     title(sub=paste('pi0 =', round(x$pi0,3),sep=''))
@@ -358,7 +380,9 @@ plot.nparncpt=function(x,...)
         d=sweep(dnorm(xx),2,x$all.sigs,'/')
         drop(d%*%x$beta)
     }
-    curve(d.ncp, min(x$data$tstat,x$all.mus),max(x$data$tstat,x$all.mus),100,col=4,lwd=2, xlab='delta',ylab='density')
+	lb=if(min(x$all.mus)<=0) min(x$all.mus)*1.1 else min(x$all.mus)/1.1
+	ub=if(max(x$all.mus)>=0) min(x$all.mus)*1.1 else max(x$all.mus)/1.1
+    curve(d.ncp, lb,ub,col=4,lwd=2, xlab=expression(delta),ylab='density')
 #    detach(x)
     rug(x$all.mus)
     title(sub=paste("mean =",round(x$mu.ncp,3),"; sd =",round(x$sd.ncp,3),sep=''))
@@ -481,7 +505,7 @@ grad.C=function(thetas){  ## grad.C^TRUE thetas + C >=0
 Amat=grad.C(numeric(K))
     
 sqp=function(thetas, conv.f=1e-10, fnscale, verbose=TRUE) {
-#loadOrInstall("quadprog")
+#library("quadprog")
   npll.last=Inf
   repeat{
 
@@ -592,7 +616,7 @@ if( 1-sum(thetas)<eps) {## pi0=0, i.e. sum(thetas)==1; ## this needs reparameter
 #curve(d.ncp(x, co.fit$par/sum(co.fit$par)), -5,5,100,add=TRUE)
 
 
-x11(); 
+dev.new(); 
 strt=rep(1/K,K); strt=strt/sum(strt)*.5
 #strt=runif(K); strt=strt/sum(strt)*.5
 sqp.fit=sqp(strt,1e-10)

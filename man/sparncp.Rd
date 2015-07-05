@@ -39,11 +39,12 @@ are made and their results are used in combination.
         \item{hessian}{analytic hessian at the estimate (not implemented) }
         \item{parfit}{ the fitted \code{\link{parncpt}} object}
         \item{nparfit}{the fitted \code{\link{nparncpt}} object}
+		\item{nobs}{the number of test statistics}
 }
 \references{ 
 I. Olkin and C. H. Spiegelman. (1987) A Semiparametric Approach to Density Estimation. Journal of the American Statistical Association. 82,399,858--865
 
-Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics (in press).
+Qu L, Nettleton D, Dekkers JCM. (2012) Improved Estimation of the Noncentrality Parameter Distribution from a Large Number of $t$-statistics, with Applications to False Discovery Rate Estimation in Microarray Data Analysis. Biometrics, 68, 1178--1187.
 }
 \author{ Long Qu }
 %\note{ 

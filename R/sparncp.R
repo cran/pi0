@@ -1,4 +1,4 @@
-sparncpt=function(obj1, obj2, ...) UseMethod('sparncpt')
+sparncpt=function(obj1, obj2, ...) 	UseMethod('sparncpt')
 
 sparncpt.nparncpt=function(obj1, obj2,...)
 {   tmp=obj1;
@@ -8,9 +8,22 @@ sparncpt.nparncpt=function(obj1, obj2,...)
 }
 
 sparncpt.numeric=function(obj1, obj2, ...)
-{   tstat=obj1; df=obj2
-    obj1=parncpt(tstat,df, zeromean=FALSE, ...)
-    obj2=nparncpt(tstat,df, ...)
+{
+	ddd=list(...); dnames=names(ddd)
+	if('df'%in%dnames && !('tstat'%in%dnames)){
+		ddd$tstat=obj1
+		if(!missing(obj2)) ddd=c(obj2, ddd)
+	}else if('tstat'%in%dnames && !('df'%in%dnames)){
+		ddd$df=obj1
+		if(!missing(obj2)) ddd=c(obj2, ddd)
+	}else if('tstat'%in%dnames && 'df'%in%dnames){
+		if(!missing(obj2)) ddd=c(obj2, ddd)
+		if(!missing(obj1)) ddd=c(obj1, ddd)
+	} else {
+		ddd$tstat=obj1; ddd$df=obj2
+	}
+	obj1=do.call('parncpt', c(zeromean=FALSE, ddd))
+    obj2=do.call('nparncpt', ddd)
     sparncpt.parncpt(obj1, obj2, ...)
 }
 
@@ -26,16 +39,30 @@ sparncpt.parncpt=function(obj1, obj2, ...)
     propar=round(propar.fit$maximum,3)
     ll=propar.fit$objective
     attr(ll,'df')=ifelse(propar==1 || propar==0, 0,1)+propar*parfit$enp+(1-propar)*nparfit$enp
+	attr(ll,'nobs')=nobs(obj1)
+	class(ll)='logLik'
 
     ans=list(pi0=propar*parfit$pi0+(1-propar)*nparfit$pi0,
              mu.ncp=propar*parfit$mu.ncp+(1-propar)*nparfit$mu.ncp,
              sd.ncp=sqrt((propar*parfit$sd.ncp)^2+((1-propar)*nparfit$sd.ncp)^2),
              logLik=ll, enp=attr(ll,'df'), par=propar, 
              gradient=NULL,      hessian=NULL,      ## TO BE ADDED LATER
-             parfit=parfit, nparfit=nparfit
+             parfit=parfit, nparfit=nparfit, nobs=nobs(obj1)
              )
     class(ans)=c('sparncpt','ncpest')
     ans
+}
+
+sparncpt.default=function(obj1, obj2, ...)
+{
+	if(missing(obj1) && !missing(obj2)) return(sparncpt(obj2, , ...))
+	ddd=list(...); dnames=names(ddd)
+	if(missing(obj1) && missing(obj2)) {
+		ddd$obj1=ddd$tstat; ddd$obj2=ddd$df; 
+		ddd$tstat=ddd$df=NULL
+		return(do.call('sparncpt', ddd))
+	}
+	stop('Please refer to "sparncpt" syntax.')
 }
 
 fitted.sparncpt=#fitted.values.sparncpt=
@@ -62,14 +89,14 @@ summary.sparncpt=function(object,...)
 }
 plot.sparncpt=function(x,...)
 {
-#    x11(width=8, height=4)
+#    dev.new(width=8, height=4)
     op=par(mfrow=c(1,2))
     hist(x$parfit$data$tstat, pr=TRUE, br=min(c(max(c(20, length(x$parfit$data$tstat)/100)), 200)), xlab='t',main='t-statistics')
     ord=order(x$parfit$data$tstat)
     lines(x$parfit$data$tstat[ord], fitted(x)[ord], col='red', lwd=2)
     d.ncp=function(d) dncp(x)(d)
     curve(d.ncp, quantile(x$parfit$data$tstat,.001), quantile(x$parfit$data$tstat,.999), 500, 
-        xlab='delta', ylab='density',main='noncentrality parameters')
+        xlab=expression(delta), ylab='density',main='noncentrality parameters')
     abline(v=c(0, x$mu.ncp), lty=1:2)
     par(op)
     invisible(x)
@@ -90,8 +117,8 @@ plot.sparncpt=function(x,...)
 #    solver=match.arg(solver)
 #    penalty=match.arg(penalty)
 #    solver.package=switch(solver, solve.QP='limSolve', ipop='kernlab', lsei='limSolve',LowRankQP='LowRankQP')
-#    loadOrInstall(solver.package)
-#    loadOrInstall("Matrix")
+#library(solver.package)
+#library("Matrix")
 #    if (K<=0 || length(K)!=1) stop("K should be a positive integer")
 #    if (any(lambdas<0)) stop("lambdas should be a vector of positive numbers")
 #    if (length(bounds)==1) bounds=c(-abs(bounds), abs(bounds))
@@ -324,7 +351,7 @@ plot.sparncpt=function(x,...)
 #
 #    if(smooth.enp) {
 #          warning("smoothing snp is not well tested")
-#        loadOrInstall("monoProc")
+#library("monoProc")
 #        loe=loess(enps~log10(lambdas))
 #        mon=mono.1d(list(log10(lambdas), fitted(loe)), bw.nrd0(fitted(loe))/3,mono1='decreasing')
 #        enps.smooth=mon@y
@@ -389,7 +416,7 @@ plot.sparncpt=function(x,...)
 #}
 #plot.sparncp=function(x,...)
 #{
-#    x11(width=7,heigh=7)
+#    dev.new(width=7,heigh=7)
 #    op=par(mfrow=c(2,2))
 ##    attach(x)
 #    n.lambda=length(x$all.lambdas)
@@ -538,7 +565,7 @@ grad.C=function(thetas){  ## grad.C^TRUE thetas + C >=0
 Amat=grad.C(numeric(K))
     
 sqp=function(thetas, conv.f=1e-10, fnscale, verbose=TRUE) {
-#loadOrInstall("quadprog")
+#library("quadprog")
   npll.last=Inf
   repeat{
 
@@ -649,7 +676,7 @@ if( 1-sum(thetas)<eps) {## pi0=0, i.e. sum(thetas)==1; ## this needs reparameter
 #curve(d.ncp(x, co.fit$par/sum(co.fit$par)), -5,5,100,add=TRUE)
 
 
-x11(); 
+dev.new(); 
 strt=rep(1/K,K); strt=strt/sum(strt)*.5
 #strt=runif(K); strt=strt/sum(strt)*.5
 sqp.fit=sqp(strt,1e-10)
